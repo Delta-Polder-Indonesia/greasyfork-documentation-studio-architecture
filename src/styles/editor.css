@@ -1,0 +1,91 @@
+.prose {
+  max-width: 100%;
+}
+
+.prose pre {
+  overflow-x: auto;
+  border-radius: 0.75rem;
+  border: 1px solid rgb(51 65 85 / 0.5);
+  background: rgb(2 6 23 / 0.8);
+  padding: 0.875rem;
+}
+
+.prose code {
+  border-radius: 0.35rem;
+  background: rgb(15 23 42);
+  padding: 0.15rem 0.35rem;
+  color: rgb(226 232 240);
+}
+
+.prose pre code {
+  background: transparent;
+  padding: 0;
+}
+
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.prose th,
+.prose td {
+  border: 1px solid rgb(71 85 105);
+  padding: 0.5rem;
+}
+
+code[class*="language-"],
+pre[class*="language-"] {
+  color: #d6deeb;
+  text-shadow: none;
+  font-family: "Fira Code", Consolas, Monaco, "Andale Mono", monospace;
+  line-height: 1.5;
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #637777;
+}
+
+.token.punctuation {
+  color: #c792ea;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #ff5874;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #c3e88d;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: #89ddff;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #89ddff;
+}
+
+.token.function,
+.token.class-name {
+  color: #82aaff;
+}
