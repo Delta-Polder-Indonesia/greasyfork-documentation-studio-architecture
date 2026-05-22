@@ -28,6 +28,7 @@ export function Preview() {
 
       <div
         ref={ref}
+        data-testid="preview-pane"
         className="prose prose-invert mx-auto max-w-4xl rounded-xl border border-slate-700 bg-slate-950/70 px-8 py-8"
         dangerouslySetInnerHTML={{ __html: previewHtml }}
       />

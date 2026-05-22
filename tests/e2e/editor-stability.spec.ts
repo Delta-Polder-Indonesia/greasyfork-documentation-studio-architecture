@@ -9,8 +9,8 @@ test("editor renders and accepts input", async ({ page }) => {
   await editor.fill("# Test Document\n\nHello world");
   await editor.blur();
 
-  // Switch to preview
-  await page.getByRole("button", { name: "Preview" }).click();
+  // Switch to preview via exact match
+  await page.getByRole("button", { name: "Preview", exact: true }).click();
   const preview = page.getByTestId("preview-pane");
   await expect(preview).toBeVisible();
   await expect(preview).toContainText("Test Document");
