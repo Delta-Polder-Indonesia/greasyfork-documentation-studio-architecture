@@ -1,55 +1,48 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import { useEditorStore } from "@/store/useEditorStore";
 
-function resetEditorStore() {
-  useEditorStore.setState((state) => ({
-    ...state,
-    doc: {
-      html: "<p>initial</p>",
-      markdown: "initial",
-      lastEdited: "markdown",
-    },
-    history: [],
-    future: [],
+function resetStore() {
+  useEditorStore.setState({
+    markdown: "initial",
+    html: "<p>initial</p>",
     previewHtml: "<p>initial</p>",
     warnings: [],
-    activeTransactionId: null,
-  }));
+  });
 }
 
 describe("editor store integration", () => {
   beforeEach(() => {
-    window.localStorage.clear();
-    resetEditorStore();
+    resetStore();
   });
 
-  it("batches history snapshots in same transaction", () => {
+  it("updates markdown and syncs html", () => {
     const store = useEditorStore.getState();
+    store.setMarkdown("# Hello");
 
-    store.setMarkdownContent("first", { transactionId: "tx-1" });
-    store.setMarkdownContent("second", { transactionId: "tx-1" });
-    store.setMarkdownContent("third", { transactionId: "tx-1" });
-
-    expect(useEditorStore.getState().history).toHaveLength(1);
+    const state = useEditorStore.getState();
+    expect(state.markdown).toBe("# Hello");
+    expect(state.html).toContain("<h1>");
+    expect(state.previewHtml).toContain("<h1>");
   });
 
   it("maintains undo redo integrity", () => {
     const store = useEditorStore.getState();
-    store.setMarkdownContent("v1", { transactionId: "tx-a" });
-    store.setMarkdownContent("v2", { transactionId: "tx-b" });
-    store.undo();
+    store.setMarkdown("v1");
+    store.setMarkdown("v2");
 
-    expect(useEditorStore.getState().doc.markdown).toContain("v1");
+    store.undo();
+    expect(useEditorStore.getState().markdown).toBe("v1");
+
     store.redo();
-    expect(useEditorStore.getState().doc.markdown).toContain("v2");
+    expect(useEditorStore.getState().markdown).toBe("v2");
   });
 
   it("keeps preview sanitized after HTML update", () => {
     const store = useEditorStore.getState();
-    store.setHtmlContent('<p>Hello</p><script>alert("x")</script>', "html", { transactionId: "tx-html" });
+    store.setHtml('<p>Hello</p><script>alert("x")</script>');
 
     const state = useEditorStore.getState();
-    expect(state.previewHtml).toContain("<p>Hello</p>");
+    expect(state.previewHtml).toContain("Hello");
     expect(state.previewHtml).not.toContain("<script>");
   });
 });

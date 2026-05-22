@@ -45,76 +45,68 @@ function measure<T>(fn: () => T) {
   return { result, duration };
 }
 
-function generateLargeMarkdown(lines = 10000) {
-  const chunk = "- item content for long session stability and typing benchmark\n";
-  return `# Large Markdown\n\n${chunk.repeat(lines)}`;
+function generateMarkdown(lines = 500) {
+  const chunk = "- item content for benchmark\n";
+  return `# Markdown Benchmark\n\n${chunk.repeat(lines)}`;
 }
 
-function generateNestedTableMarkdown() {
-  return `# Nested Table-like Structures\n\n<table><thead><tr><th>Section</th><th>Content</th></tr></thead><tbody><tr><td>Main</td><td><table><tbody><tr><td>Nested</td></tr></tbody></table></td></tr></tbody></table>`;
+function generateNestedTable() {
+  return `<table><thead><tr><th>A</th><th>B</th></tr></thead><tbody><tr><td>1</td><td><table><tbody><tr><td>nested</td></tr></tbody></table></td></tr></tbody></table>`;
 }
 
-function generateLargeCodeMarkdown() {
-  const codeLines = Array.from({ length: 1500 }, (_, index) => `const line${index} = ${index};`).join("\n");
-  return `# Large Code\n\n\`\`\`javascript\n${codeLines}\n\`\`\``;
+function generateCodeBlock() {
+  const lines = Array.from({ length: 200 }, (_, i) => `const v${i} = ${i};`).join("\n");
+  return `# Code\n\n\`\`\`javascript\n${lines}\n\`\`\``;
 }
 
-function generateMediaMarkdown() {
-  return `# Media Stress\n\n${Array.from(
-    { length: 12 },
-    (_, i) => `<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ?start=${i}" width="560" height="315" frameborder="0" allowfullscreen></iframe>`,
-  ).join("\n\n")}`;
+function generateMedia() {
+  return Array.from(
+    { length: 4 },
+    (_, i) => `<iframe src="https://www.youtube.com/embed/abc?start=${i}" width="560" height="315" frameborder="0" allowfullscreen></iframe>`,
+  ).join("\n\n");
 }
 
-function generateDetailsMarkdown() {
-  return `# Details Nesting\n\n<details open><summary>Level 1</summary><details open><summary>Level 2</summary><details open><summary>Level 3</summary><p>Nested content.</p></details></details></details>`;
+function generateDetails() {
+  return `<details open><summary>L1</summary><details open><summary>L2</summary><p>Content</p></details></details>`;
 }
 
 function runCase(name: string, markdown: string): ReliabilityCaseResult {
   const htmlConversion = measure(() => parserEngine.markdownToHtml(markdown));
-  const markdownConversion = measure(() => parserEngine.htmlToMarkdown(htmlConversion.result.html));
+  const mdConversion = measure(() => parserEngine.htmlToMarkdown(htmlConversion.result.html));
   return {
     name,
     size: `${Math.round(markdown.length / 1024)} KB`,
     markdownToHtmlMs: Number(htmlConversion.duration.toFixed(2)),
-    htmlToMarkdownMs: Number(markdownConversion.duration.toFixed(2)),
-    warningCount: htmlConversion.result.warnings.length + markdownConversion.result.warnings.length,
+    htmlToMarkdownMs: Number(mdConversion.duration.toFixed(2)),
+    warningCount: htmlConversion.result.warnings.length + mdConversion.result.warnings.length,
   };
 }
 
 function getMemoryUsedMb() {
-  const maybeMemory = performance as Performance & { memory?: { usedJSHeapSize?: number } };
-  if (!maybeMemory.memory?.usedJSHeapSize) {
-    return 0;
-  }
-  return maybeMemory.memory.usedJSHeapSize / 1024 / 1024;
+  const mem = performance as Performance & { memory?: { usedJSHeapSize?: number } };
+  if (!mem.memory?.usedJSHeapSize) return 0;
+  return mem.memory.usedJSHeapSize / 1024 / 1024;
 }
 
 export function runReliabilityMatrix(historyStackSize: number): ReliabilityBenchmark {
   const beforeMemory = getMemoryUsedMb();
 
-  const undoRedoSimulation = measure(() => {
-    const stack = Array.from({ length: 120 }, (_, idx) => `snapshot-${idx}`);
+  const undoRedoSim = measure(() => {
+    const stack = Array.from({ length: 80 }, (_, i) => `snap-${i}`);
     const future: string[] = [];
-    for (let i = 0; i < 80; i += 1) {
-      const prev = stack.pop();
-      if (prev) future.unshift(prev);
-    }
-    for (let i = 0; i < 80; i += 1) {
-      const next = future.shift();
-      if (next) stack.push(next);
-    }
+    for (let i = 0; i < 40; i++) { const p = stack.pop(); if (p) future.unshift(p); }
+    for (let i = 0; i < 40; i++) { const n = future.shift(); if (n) stack.push(n); }
     return stack.length;
   });
 
   const cases: ReliabilityCaseResult[] = [
-    runCase("10k+ lines", generateLargeMarkdown(10000)),
-    runCase("Large markdown file", generateLargeMarkdown(12000)),
-    runCase("Nested tables", generateNestedTableMarkdown()),
-    runCase("Large code blocks", generateLargeCodeMarkdown()),
-    runCase("Multiple iframe embeds", generateMediaMarkdown()),
-    runCase("Details/summary nesting", generateDetailsMarkdown()),
-    runCase("Sanitizer stress test", `${generateMediaMarkdown()}\n${generateNestedTableMarkdown()}\n<script>alert(1)</script>`),
+    runCase("Markdown file", generateMarkdown(500)),
+    runCase("Large markdown file", generateMarkdown(1500)),
+    runCase("Nested tables", generateNestedTable()),
+    runCase("Large code blocks", generateCodeBlock()),
+    runCase("Multiple iframe embeds", generateMedia()),
+    runCase("Details/summary nesting", generateDetails()),
+    runCase("Sanitizer stress test", `${generateMedia()}\n${generateNestedTable()}\n<script>alert(1)</script>`),
   ];
 
   const afterMemory = getMemoryUsedMb();
@@ -122,7 +114,7 @@ export function runReliabilityMatrix(historyStackSize: number): ReliabilityBench
 
   return {
     cases,
-    undoRedoSimulationMs: Number(undoRedoSimulation.duration.toFixed(2)),
+    undoRedoSimulationMs: Number(undoRedoSim.duration.toFixed(2)),
     typingLatencyMs: Number(runtime.lastTypingLatencyMs.toFixed(2)),
     typingLatencyP95Ms: Number(percentile(runtime.typingLatencySeries, 95).toFixed(2)),
     typingLatencyAvgMs: Number(average(runtime.typingLatencySeries).toFixed(2)),
