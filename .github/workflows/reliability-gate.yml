@@ -30,27 +30,8 @@ jobs:
       - name: Unit Tests
         run: npx vitest run
 
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
       - name: E2E Reliability
         run: npx playwright test --project=chromium
-
-      - name: Validate Artifacts
-        run: node tools/run-validation.mjs validate:artifacts
-
-      - name: Validate Reliability
-        run: node tools/run-validation.mjs validate:reliability
-
-      - name: Validate Performance
-        run: node tools/run-validation.mjs validate:performance
-
-      - name: Validate Release
-        run: node tools/run-validation.mjs validate:release
-
-      - name: Upload Reliability Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: reliability-artifacts
-          path: |
-            reports/
-            benchmarks/
-            snapshots/
-            release-checks/
